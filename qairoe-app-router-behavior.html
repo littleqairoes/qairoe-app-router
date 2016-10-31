@@ -1,0 +1,241 @@
+<!-- Polymer dependencies -->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../lazy-imports/lazy-imports.html">
+
+<script>
+  (function(){
+    'use strict';
+    /** @polymerBehavior Polymer.ReachCoreRouteBehavior */
+    Polymer.QairoeAppRouterBehaviorImpl = {
+      
+      observers: [
+        '_setQueryParams(_route.__queryParams)',
+        '_setPath(_route.path)'
+      ],
+      
+      properties: {
+        _route: {
+          type: Object
+        },
+        path: {
+          type: String,
+          notify: true,
+          observer: '_pathChanged'
+        },
+        params: {
+          type: Object,
+          value: function() { return {}; },
+          notify: true
+        },
+        queryParams: {
+          type: Object,
+          value: function() { return {}; },
+          notify: true
+        },
+        parentTagName: {
+          type: String
+        }
+      },
+      
+      _fromElement: null,
+      
+      _routes: {},
+      
+      _currentView: '',
+      
+      _newView: '',
+      
+      attached: function() {
+        // https://github.com/Polymer/polymer/blob/master/src/lib/dom-module.html#L69
+        // Using DomModule API import to get the element with links
+        this._fromElement = Polymer.DomModule && Polymer.DomModule.import && this.parentTagName ?
+            Polymer.DomModule.import(this.parentTagName) : null;
+            
+        if (!this._fromElement || !this.parentTagName) {
+          return console.error(new Error('Please put existing element name with link tags with rel="lazy-import"'));
+        }
+        
+        this._observer = Polymer.dom(this).observeNodes(function(info) {
+          this._contentAdded(info.addedNodes.filter(function(node) {
+            return (node.nodeType === Node.ELEMENT_NODE);
+          }));
+        }.bind(this));
+      },
+      
+      detached: function() {
+        Polymer.dom(this).unobserveNodes(this._observer);
+      },
+      
+      _setQueryParams: function(queryParams) {
+        this.queryParams = queryParams;
+        
+        if (this._routes[this._currentView] && 
+            this._routes[this._currentView].element && 
+            this._routes[this._currentView].element.updateView) {
+          
+          this._routes[this._currentView].element.updateView({
+            params: this.params,
+            queryParams: this.queryParams
+          });
+          
+        } 
+      },
+      
+      _setPath: function(path) {
+        this.path = path || '/';
+      },
+      
+      _contentAdded: function(pages) {
+        for (var i in pages) {
+          var el = pages[i];
+
+          if (el && el.hasAttribute && el.hasAttribute('route')) {
+            var route = el.getAttribute('route');
+            this.set('_routes.' + route, {
+              element: el
+            });
+          }
+        }
+        this._pathChanged(this.path);
+      },
+      
+      _pathChanged: function(path, authFlag) {
+        var routes = this._routes;
+        var patternMatched = null;
+        this.params = {};
+        
+        for (var pattern in routes) {
+          
+          if (pattern === 'not-authorized' || pattern === 'not-found') {
+            continue;
+          }
+          
+          var remainingPieces = path.split('/');
+          var patternPieces = pattern.split('/');
+          var pathLength = remainingPieces[remainingPieces.length - 1] === '' ? remainingPieces.length - 1 : remainingPieces.length;
+          var patternLength = patternPieces[patternPieces.length - 1] === '' ? patternPieces.length - 1 : patternPieces.length;
+          
+          if (pathLength === patternLength) {
+            var routeMatched = [];
+            var namedMatches = {};
+            
+            for (var i=0; i < patternPieces.length; i++) {
+              var patternPiece = patternPieces[i];
+              if (!patternPiece && patternPiece !== '') {
+                break;
+              }
+              
+              var pathPiece = remainingPieces.shift();
+              // We don't match this path.
+              if (!pathPiece && pathPiece !== '') {
+                break;
+              }
+              
+              routeMatched.push(patternPiece);
+              
+              if (patternPiece.charAt(0) == ':') {
+                namedMatches[patternPiece.slice(1)] = pathPiece;
+                
+              } else if (patternPiece !== pathPiece) {
+                break;
+              }
+              patternMatched = routeMatched.join('/');
+            }
+            
+            if (patternMatched) {
+              break;
+            }
+          }
+        }
+        
+        if (patternMatched) {
+          this._newView = patternMatched;
+          this.params = namedMatches;
+        } else {
+          this._newView = 'not-found';
+        }
+
+        this._changeView(authFlag);
+      },
+      
+      _changeView: function(authFlag) {
+        var outViewPromise = null;
+        var newView = this._routes[this._newView];
+        var currentView = this._routes[this._currentView];
+        var promises = [];
+        var data = {
+          params: this.params,
+          queryParams: this.queryParams
+        };
+        
+        if (!newView || !newView.element) {
+          return;
+        }
+        
+        if (newView.element.auth !== null && newView.element.auth !== undefined && !newView.element.auth) {
+          if (!authFlag) {
+            return this.async(this._changeView.bind(this, true), 1500);
+          } else {
+            this._newView = 'not-authorized';
+            newView = this._routes[this._newView];
+          }
+        }
+        
+        if (this._newView === this._currentView) {
+          return;
+        }
+        
+        if (currentView && currentView.element && currentView.element.exitView) {
+          outViewPromise = currentView.element.exitView(data); 
+        }
+        
+        if (!(outViewPromise instanceof Promise)) {
+          outViewPromise = Promise.resolve();
+        }
+        
+        promises.push(outViewPromise);
+        if (!this._routes[this._newView].resolved) {
+          promises.push(this.importLazyGroup(newView.element.tagName.toLocaleLowerCase(), this._fromElement));  
+        }
+        
+        Promise.all(promises).then(function(result) {
+          console.log(result)
+          if (result[1]) {
+            this._routes[this._newView].resolved = result[1];
+          }
+          // console.log(this._newView, this._routes[this._newView].resolved)
+          if (this._routes[this._newView].resolved.loaded.length === 0 || 
+              newView.element.constructor === HTMLElement || 
+              newView.element.constructor === HTMLUnknownElement) {
+            this._newView = 'not-found';
+          }
+          
+          if (this._routes[this._newView].resolved.loaded.length > 0 && 
+             (newView.element.constructor === HTMLElement || 
+              newView.element.constructor === HTMLUnknownElement)) {
+            console.error(new Error('You have loaded a different file that didn\'t define the element: ' + newView.element.tagName.toLocaleLowerCase()))      
+          }
+          
+          this.$$('#viewport').select(this._newView);
+          this._currentView = this._newView;
+          
+          if (newView && newView.element && newView.element.enterView) {
+            newView.element.enterView(data);
+          }
+          
+          // handle other things
+        }.bind(this))
+      },
+      
+      renderForAuth: function() {
+        this._pathChanged(this.path, true)
+      }
+    }
+    
+    /** @polymerBehavior */
+    Polymer.QairoeAppRouterBehavior = [
+      Polymer.LazyImportsBehavior,
+      Polymer.QairoeAppRouterBehaviorImpl
+    ];
+  })();
+</script>

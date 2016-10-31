@@ -1,0 +1,60 @@
+<!--<link rel="import" href="../polymer/polymer.html">-->
+<link rel="import" href="../qairoe-app-router.html">
+
+<dom-module id="custom-app">
+  <!-- just for sake of this demo, the demo is being put at the root so i have to add base_url demo -->
+  <link rel="lazy-import" href="demo/page-element.html" group="page-element">
+  <link rel="lazy-import" href="demo/page-element-one.html" group="page-element-one">
+  <link rel="lazy-import" href="demo/page-element-two.html" group="page-element-two">
+  <link rel="lazy-import" href="demo/page-element-three.html" group="page-element-three">
+  <link rel="lazy-import" href="demo/page-not-authorized.html" group="page-not-authorized">
+  <link rel="lazy-import" href="demo/page-not-found.html" group="page-not-found">
+  
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    
+    <button on-tap="_auth">Authenticate</button>
+    <br/>
+    Authenticated? [[someBooleanValue]]
+    <br/>
+    <a href="/">Page 1</a>
+    <a href="/page">Page 1</a>
+    <a href="/page/id?hello=12">Page 2</a>
+    <a href="/page/id2/edit">Page 3</a>
+    <a href="/hey/id2/edit">Not Found</a>
+    
+    <qairoe-app-router parent-tag-name="custom-app">
+      <page-element route="/"></page-element>
+      <page-element-one route="/page"></page-element-one>
+      <page-element-two route="/page/:id"></page-element-two>
+      <page-element-three route="/page/:id/edit" auth="[[someBooleanValue]]"></page-element-three>
+      <page-not-authorized route="not-authorized"></page-not-authorized>
+      <page-not-found route="not-found"></page-not-found>
+    </qairoe-app-router>
+    
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'custom-app',
+      
+      properties: {
+        someBooleanValue: {
+          type: Boolean,
+          value: false
+        }
+      },
+      
+      _auth: function() {
+        this.someBooleanValue = !this.someBooleanValue;
+        this.$$('qairoe-app-router').renderForAuth();
+      },
+
+    });
+  </script>
+</dom-module>
