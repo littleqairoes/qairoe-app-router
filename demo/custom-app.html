@@ -21,15 +21,17 @@
     <br/>
     Authenticated? [[someBooleanValue]]
     <br/>
-    <a href="/">Page 1</a>
-    <a href="/page">Page 1</a>
+    <a href="/">Home</a>
+    <a href="/page-2">Page 1 only</a>
+    <a href="/page-2/hahahaha">Page 1 with *</a>
+    <a href="/page-2/hge/eahae">Page 1 with * too</a>
     <a href="/page/id?hello=12">Page 2</a>
     <a href="/page/id2/edit">Page 3</a>
     <a href="/hey/id2/edit">Not Found</a>
     
     <qairoe-app-router parent-tag-name="custom-app">
       <page-element route="/"></page-element>
-      <page-element-one route="/page"></page-element-one>
+      <page-element-one route="/page-2/*"></page-element-one>
       <page-element-two route="/page/:id"></page-element-two>
       <page-element-three route="/page/:id/edit" auth="[[someBooleanValue]]"></page-element-three>
       <page-not-authorized route="not-authorized"></page-not-authorized>

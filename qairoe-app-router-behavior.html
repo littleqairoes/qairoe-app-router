@@ -14,35 +14,73 @@
       ],
       
       properties: {
+        /**
+         * Comes from app-location. The current most important parts here
+         * are `path` and `__queryParams` which sets the `path` and `queryParams`
+         * of this element respectively.
+         * @type {{prefix: string, path: string, __queryParams: object }}
+         */ 
         _route: {
           type: Object
         },
+        
+        /**
+         * The current path of the app. Changes depending on the URL put at the top
+         * or pushed in the state of the browser
+         */
         path: {
           type: String,
           notify: true,
           observer: '_pathChanged'
         },
+        
+        /**
+         * This is an object that holds the values of the parameters in the route
+         * pattern set in the current page element being viewed.
+         */ 
         params: {
           type: Object,
           value: function() { return {}; },
           notify: true
         },
+        
+        /**
+         * This is an object that holds the values of the query parameters in the url
+         */ 
         queryParams: {
           type: Object,
           value: function() { return {}; },
           notify: true
         },
+        
+        /**
+         * This is required. This is the tag-name of the element that holds
+         * the list of page elements that will need to be lazy-loaded.
+         */
         parentTagName: {
           type: String
         }
       },
       
+      /**
+       * This will be the registered element that holds all the source files of the
+       * elements that needed to be lazy-loaded.
+       */
       _fromElement: null,
       
+      /**
+       * This is a dictionary of routes linked to its corresponding elements.
+       */
       _routes: {},
       
+      /**
+       * This holds the current route that is being viewed
+       */
       _currentView: '',
       
+      /**
+       * This holds the next route to be viewed after the url has been changed.
+       */
       _newView: '',
       
       attached: function() {
@@ -66,9 +104,20 @@
         Polymer.dom(this).unobserveNodes(this._observer);
       },
       
+      /**
+       * Sets the queryParams property and updates the element's params and queryParams
+       * properties. It also calls the page element's updateView method if it exists
+       */
       _setQueryParams: function(queryParams) {
         this.queryParams = queryParams;
-        
+        this._updateCurrentViewData();
+      },
+      
+      /**
+       *  updates the currentView using the updateView method and 
+       *  and also updates the currentView's params and queryParams attributes
+       */
+      _updateCurrentViewData: function() {
         if (this._routes[this._currentView] && 
             this._routes[this._currentView].element && 
             this._routes[this._currentView].element.updateView) {
@@ -77,14 +126,23 @@
             params: this.params,
             queryParams: this.queryParams
           });
-          
         } 
+        
+        this._routes[this._currentView].element.params = this.params;
+        this._routes[this._currentView].element.queryParams = this.queryParams;
       },
       
+      /**
+       * Sets the path property
+       */
       _setPath: function(path) {
         this.path = path || '/';
       },
       
+      /**
+       * Called in the attached lifecycle method to put the children to the dictionary
+       * for easy referencing
+       */
       _contentAdded: function(pages) {
         for (var i in pages) {
           var el = pages[i];
@@ -108,55 +166,76 @@
         this._pathChanged(this.path);
       },
       
+      /**
+       * This is called when the path changes. It tries to look for a the pattern
+       * that matches the path, then calls the _changeView method to change the view
+       */
       _pathChanged: function(path, authFlag) {
         var routes = this._routes;
         var patternMatched = null;
         this.params = {};
         
+        // goes checks each and every route
         for (var pattern in routes) {
           
+          // Because 404 and 403 are not url patterns
           if (pattern === 'not-authorized' || pattern === 'not-found') {
             continue;
           }
           
           var remainingPieces = path.split('/');
           var patternPieces = pattern.split('/');
-          var pathLength = remainingPieces[remainingPieces.length - 1] === '' ? remainingPieces.length - 1 : remainingPieces.length;
-          var patternLength = patternPieces[patternPieces.length - 1] === '' ? patternPieces.length - 1 : patternPieces.length;
+          var routeMatched = [];
+          var namedMatches = {};
           
-          if (pathLength === patternLength) {
-            var routeMatched = [];
-            var namedMatches = {};
+          // evaluate and match the path to pattern
+          for (var i=0; i < patternPieces.length; i++) {
+            var patternPiece = patternPieces[i];
             
-            for (var i=0; i < patternPieces.length; i++) {
-              var patternPiece = patternPieces[i];
-              if (!patternPiece && patternPiece !== '') {
-                break;
-              }
-              
-              var pathPiece = remainingPieces.shift();
-              // We don't match this path.
-              if (!pathPiece && pathPiece !== '') {
-                break;
-              }
-              
-              routeMatched.push(patternPiece);
-              
-              if (patternPiece.charAt(0) == ':') {
-                namedMatches[patternPiece.slice(1)] = pathPiece;
-                
-              } else if (patternPiece !== pathPiece) {
-                break;
-              }
-              patternMatched = routeMatched.join('/');
-            }
-            
-            if (patternMatched) {
+            // stops if the pattern piece is not existing
+            if (!patternPiece && patternPiece !== '') {
               break;
             }
+            
+            // get the left side of the path.
+            var pathPiece = remainingPieces.shift();
+            
+            // stops if the left side doesn't exist
+            if (!pathPiece && pathPiece !== '') {
+              break;
+            }
+            
+            // push the current pattern to the route matched
+            routeMatched.push(patternPiece);
+            
+            // if it has a ':', it means that the value in the current path fragment
+            // should be put in the variable that has the name after the ':'
+            if (patternPiece.charAt(0) == ':') {
+              namedMatches[patternPiece.slice(1)] = pathPiece;
+              
+            // if it is a '*', it means that it should accept all paths that has
+            // a prefix of the route matched
+            } else if (patternPiece === '*') {
+              patternMatched = routeMatched.join('/');
+              
+            // the pattern piece and the path piece doesn't match, go to next route pattern
+            } else if (patternPiece !== pathPiece) {
+              break;
+            }
+            
+            // create the pattern matched
+            patternMatched = routeMatched.join('/');
           }
+          
+          // if pattern matched is created, stop searching and change views
+          if (patternMatched) {
+            break;
+          }
+          // }
         }
         
+        // if pattern matched is created, change the view, if exausted all
+        // route patterns, make view a not-found
         if (patternMatched) {
           this._newView = patternMatched;
           this.params = namedMatches;
@@ -167,6 +246,9 @@
         this._changeView(authFlag);
       },
       
+      /**
+       * Changes the viewport
+       */
       _changeView: function(authFlag) {
         var outViewPromise = null;
         var newView = this._routes[this._newView];
@@ -177,47 +259,91 @@
           queryParams: this.queryParams
         };
         
+        // if there's no element that exists given a route pattern
         if (!newView || !newView.element) {
-          return;
+          // check if adding a * would do the trick
+          var array = this._newView.split('/');
+          
+          // even if adding a * at the end doesn't work, say just show not found
+          if (array[array.length - 1] === '*') {
+            this._newView = 'not-found'
+            return this._changeView(authFlag);
+            
+          // if the the last of the pattern is '', just change it to * and then check again
+          } else if (array[array.length - 1] === '') {
+            array[array.length - 1] = '*'
+          } else {
+            array.push('*')
+          }
+          
+          this._newView = array.join('/');
+          return this._changeView(authFlag);
         }
         
+        // check if the page element has an auth attribute and if it is set to true or false
         if (newView.element.auth !== null && newView.element.auth !== undefined && !newView.element.auth) {
+          
+          // if it is being checked for the first time (like first load and authentication checking hasn't kicked in)
+          // wait for 2 seconds before checking the view again.
+          // TODO: might need to add a loader of some sort
           if (!authFlag) {
-            return this.async(this._changeView.bind(this, true), 1500);
+            return this.async(this._changeView.bind(this, true), 2000);
           } else {
             this._newView = 'not-authorized';
             newView = this._routes[this._newView];
           }
         }
         
+        // if the next view is just equal to the same view, just update the data.
         if (this._newView === this._currentView) {
-          return;
+          return this._updateCurrentViewData();
         }
         
+        // calls exitView method of the currentView element
         if (currentView && currentView.element && currentView.element.exitView) {
           outViewPromise = currentView.element.exitView(data); 
         }
         
+        // checks if the output of currentView is a promise and if it is not, just create
+        // a resolved promise to continue
         if (!(outViewPromise instanceof Promise)) {
           outViewPromise = Promise.resolve();
         }
         
+        // add the promise to the list of promises
         promises.push(outViewPromise);
+        
+        // if the view has not been loaded, call the importLazyGroup method from LazyGroupBehaviors
+        // to load the element and push the result to the promise
         if (!this._routes[this._newView].resolved) {
-          promises.push(this.importLazyGroup(newView.element.tagName.toLocaleLowerCase(), this._fromElement));  
+          var lazyGroupPromise = this.importLazyGroup(newView.element.tagName.toLocaleLowerCase(), this._fromElement);
+          if (!(lazyGroupPromise instanceof Promise)) {
+            lazyGroupPromise = Promise.resolve();
+          }
+          promises.push(lazyGroupPromise);  
         }
         
+        // execute all promises and outputs the result
         Promise.all(promises).then(function(result) {
+          
+          // if there's a result from the lazy group promise
+          // set the routes resolved to the result of the promise
           if (result[1]) {
             this._routes[this._newView].resolved = result[1];
           }
-          // console.log(this._newView, this._routes[this._newView].resolved)
+          
+          // if the element has been called by the lazy group, but it is not loaded,
+          // or the constructor is set to HTMLElement or HTMLUnknownElement (for IE users)
+          // which means the definition wasn't loaded, then set the view to not-found
           if (this._routes[this._newView].resolved.loaded.length === 0 || 
               newView.element.constructor === HTMLElement || 
               newView.element.constructor === HTMLUnknownElement) {
             this._newView = 'not-found';
           }
           
+          // if the element has been loaded, but still the constructor is not set
+          // then tell the dev that the lazy-group definition loaded the wrong file
+          // for the html tag that it should define
           if (this._routes[this._newView].resolved.loaded.length > 0 && 
              (newView.element.constructor === HTMLElement || 
               newView.element.constructor === HTMLUnknownElement)) {
@@ -225,9 +351,11 @@
                           newView.element.tagName.toLocaleLowerCase()));     
           }
           
+          // set the viewport to the newView and set the currentView to the newView
           this.$$('#viewport').select(this._newView);
           this._currentView = this._newView;
           
+          // call the enterView method if it exits
           if (newView && newView.element && newView.element.enterView) {
             newView.element.enterView(data);
           }
@@ -237,13 +365,13 @@
             newView.element.queryParams = this.queryParams;
           }
           
-          // handle other things
+          // change the title in the browser
           if (newView && newView.title) {
             document.title = newView.title;
           }
-          
+        
           // using google tag manager
-          if (dataLayer) {
+          if (!typeof dataLayer) {
             dataLayer.push({
               'event':'virtualPageView',
               'page':{
@@ -252,17 +380,27 @@
               }
             });
           // or if using google analytics
-          } else if (ga) {
+          } else if (!typeof ga) {
             ga('set', 'page', this.path);
             ga('send', 'pageview');
           }
         }.bind(this)).catch(function(error) {
           console.error(error);
           
-          this.fire('change-view-error', errpr);
-        });
+          /**
+           * Fired when there's an error in changing the views.
+           *
+           * @event change-view-error
+           * @param {object} the error object.
+           */
+          this.fire('change-view-error', error);
+        }.bind(this));
       },
       
+      /**
+       * This should be called if the auth value of the current page element changes
+       * so as to "hot" reload the page.
+       */
       renderForAuth: function() {
         this._pathChanged(this.path, true);
       }

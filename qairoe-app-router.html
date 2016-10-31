@@ -53,6 +53,7 @@ Currently it follows a simple pattern like this:
 ```
 /page - for matching it with a url /page only
 /page/:id - for matching it with a url /page/somevalue where somevalue is put in the variable id
+/page/* - for matching all urls with a prefix /page
 ```
 
 ### Setting Params and QueryParams
@@ -62,16 +63,21 @@ attribute.
 
 All query-params (anything after the `?` character in the url) becomes part of the `queryParams` attribute.
 
-When the 
+When a view is put in display, the previous view's exitView method, if it exists, will be called with a parameter
+data that includes params and queryParams as its properties. The previous view's exitView method can do some cleaning
+or animation or data gathering before the previous view exits. The exitView should return a Promise so as to be chained
+before loading the next view.
+
+When the next view is to be put in display, it will lazy-load the element first if it doesn't exist in the system,
+and then calls the enterView method of the next view, if it exists. The enterView method accepts a paramater object data
+which has params and queryParams properties. The router also sets the attributes params and queryParams of the
+view's element as well. The next view's enterView method can do some initialization, animation
+or data gathering before the next view enters fully. 
 
 ### Limitations
 
-One of the current limitations of 
-
-We are trying to increase the number of patterns to match so that it will be more robust in the future.
-
-
-
+We are trying to increase the number of patterns to match so that it will be more robust in the future. If you found
+some bugs or suggestions please don't hesitate to write an issue or use a PR.
 
 @demo
 
