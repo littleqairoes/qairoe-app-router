@@ -1,3 +1,4 @@
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://github.com/littleqairoes/qairoe-app-router)
 # qairoe-app-router
 
 It's a simple routing system that changes the viewport depending on the route given
