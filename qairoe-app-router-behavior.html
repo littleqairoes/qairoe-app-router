@@ -91,10 +91,12 @@
 
           if (el && el.hasAttribute && el.hasAttribute('route')) {
             var route = el.getAttribute('route');
+            var title = el.getAttribute('title');
             
             if (!this._routes[route]) {
               this.set('_routes.' + route, {
-                element: el
+                element: el,
+                title: title
               });  
             } else {
               console.log(new Error(el.tagName.toLowerCase() + ' uses the same route: ' + 
@@ -230,7 +232,30 @@
             newView.element.enterView(data);
           }
           
+          if (newView && newView.element) {
+            newView.element.params = this.params;
+            newView.element.queryParams = this.queryParams;
+          }
+          
           // handle other things
+          if (newView && newView.title) {
+            document.title = newView.title;
+          }
+          
+          // using google tag manager
+          if (dataLayer) {
+            dataLayer.push({
+              'event':'virtualPageView',
+              'page':{
+                'title': document.title,
+                'url': window.location.href
+              }
+            });
+          // or if using google analytics
+          } else if (ga) {
+            ga('set', 'page', this.path);
+            ga('send', 'pageview');
+          }
         }.bind(this));
       },
       

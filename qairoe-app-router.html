@@ -41,7 +41,37 @@ Inside the `qairoe-app-layout`
 
 ### Using Route patterns
 
-Route patterns changes
+Route patterns are put in the attribute route per page element, which defines when
+they will show if and when the pattern is matched with the url.
+
+```html
+<page-element-one route="/page"></page-element-one>
+```
+
+Currently it follows a simple pattern like this:
+
+```
+/page - for matching it with a url /page only
+/page/:id - for matching it with a url /page/somevalue where somevalue is put in the variable id
+```
+
+### Setting Params and QueryParams
+
+If the route has a `:`, it will use the name after the `:` as a variable and put it in the `params`
+attribute.
+
+All query-params (anything after the `?` character in the url) becomes part of the `queryParams` attribute.
+
+When the 
+
+### Limitations
+
+One of the current limitations of 
+
+We are trying to increase the number of patterns to match so that it will be more robust in the future.
+
+
+
 
 @demo
 
