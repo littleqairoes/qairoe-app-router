@@ -23,13 +23,19 @@
     <br/>
     <a href="/">Home</a>
     <a href="/page-2">Page 1 only</a>
-    <a href="/page-2/hahahaha">Page 1 with *</a>
-    <a href="/page-2/hge/eahae">Page 1 with * too</a>
-    <a href="/page/id?hello=12">Page 2</a>
-    <a href="/page/id2/edit">Page 3</a>
-    <a href="/hey/id2/edit">Not Found</a>
-    
-    <qairoe-app-router parent-tag-name="custom-app">
+    <a href="/page-2/page-3?something=is&amiss">Page 1 with *</a>
+    <a href="/page-2/page-4/page-5">Page 1 with * too</a>
+    <a href="/page/qairoe?hello=12">Page 2</a>
+    <a href="/page/hello/edit">Page 3</a>
+    <a href="/hey/world/edit">Not Found</a>
+    <br/>
+    Path: [[path]]
+    <br/>
+    Params: [[_toString(params)]]
+    <br/>
+    Query Params: [[_toString(queryParams)]]
+    <br/>
+    <qairoe-app-router parent-tag-name="custom-app" path="{{path}}" params="{{params}}" query-params="{{queryParams}}">
       <page-element route="/"></page-element>
       <page-element-one route="/page-2/*"></page-element-one>
       <page-element-two route="/page/:id"></page-element-two>
@@ -56,6 +62,12 @@
         this.someBooleanValue = !this.someBooleanValue;
         this.$$('qairoe-app-router').renderForAuth();
       },
+      
+      _toString: function(obj) {
+        if (obj) {
+          return JSON.stringify(obj)
+        } 
+      }
 
     });
   </script>
