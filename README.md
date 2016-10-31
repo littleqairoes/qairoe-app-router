@@ -15,7 +15,7 @@ $ bower install littleqairoes/qairoe-app-router
 To use:
 
 ```html
-<qairoe-app-router parent-tag-name="custom-app">
+<qairoe-app-router parent-tag-name="custom-app-shell">
   <page-element-one route="/page"></page-element-one>
   <page-element-two route="/page/:id"></page-element-two>
   <page-element-three route="/page/:id/edit" auth></page-element-three>
@@ -39,7 +39,10 @@ See [ROADMAP](/ROADMAP.md)
 
 ## History
 
-- v0.0.0: Creation of repository and copying of reach-core-layout element
+- v0.0.1: Changed the whole behavior to follow what I've learned from @paullewis' router used in Supercharged
+
+- v0.0.0: Creation of repository and copying of reach-core-route element
+
 
 ## Credits
 

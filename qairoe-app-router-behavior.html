@@ -5,7 +5,7 @@
 <script>
   (function(){
     'use strict';
-    /** @polymerBehavior Polymer.ReachCoreRouteBehavior */
+    /** @polymerBehavior Polymer.QairoeAppRouterBehavior */
     Polymer.QairoeAppRouterBehaviorImpl = {
       
       observers: [
@@ -91,9 +91,16 @@
 
           if (el && el.hasAttribute && el.hasAttribute('route')) {
             var route = el.getAttribute('route');
-            this.set('_routes.' + route, {
-              element: el
-            });
+            
+            if (!this._routes[route]) {
+              this.set('_routes.' + route, {
+                element: el
+              });  
+            } else {
+              console.log(new Error(el.tagName.toLowerCase() + ' uses the same route: ' + 
+                          route + ' with ' + this._routes[route].element.tagName.toLocaleLowerCase()));
+            }
+            
           }
         }
         this._pathChanged(this.path);
@@ -199,7 +206,6 @@
         }
         
         Promise.all(promises).then(function(result) {
-          console.log(result)
           if (result[1]) {
             this._routes[this._newView].resolved = result[1];
           }
@@ -213,7 +219,8 @@
           if (this._routes[this._newView].resolved.loaded.length > 0 && 
              (newView.element.constructor === HTMLElement || 
               newView.element.constructor === HTMLUnknownElement)) {
-            console.error(new Error('You have loaded a different file that didn\'t define the element: ' + newView.element.tagName.toLocaleLowerCase()))      
+            console.error(new Error('You have loaded a different file that didn\'t define the element: ' + 
+                          newView.element.tagName.toLocaleLowerCase()));     
           }
           
           this.$$('#viewport').select(this._newView);
@@ -224,13 +231,13 @@
           }
           
           // handle other things
-        }.bind(this))
+        }.bind(this));
       },
       
       renderForAuth: function() {
-        this._pathChanged(this.path, true)
+        this._pathChanged(this.path, true);
       }
-    }
+    };
     
     /** @polymerBehavior */
     Polymer.QairoeAppRouterBehavior = [

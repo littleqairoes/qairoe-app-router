@@ -11,9 +11,41 @@
 
 <!--
 `qairoe-app-router`
-It&#39;s a simple routing system that changes the viewport depending on the route given.
+It&#39;s a simple routing system that changes the viewport depending on the route given per page.
+It uses PRPL pattern by lazy loading page elements.
 
-@demo demo/index.html 
+It is usually put inside your shell or as `main-content` part of `app-layout` or with our
+`qairoe-app-layout`
+
+```html
+<qairoe-app-router parent-tag-name="custom-app-shell">
+  <page-element-one route="/page"></page-element-one>
+  <page-element-two route="/page/:id"></page-element-two>
+  <page-element-three route="/page/:id/edit" auth="[[someBooleanValue]]"></page-element-three>
+  <page-not-authorized not-authorized></page-not-authorized>
+  <page-not-found not-found></page-not-found>
+</qairoe-app-router>
+```
+
+Inside the `qairoe-app-layout`
+
+```html
+<qairoe-app-layout>
+  <project-header main-header></project-header>
+  <project-drawer main-drawer></project-drawer>
+  <qairoe-app-router main-content parent-tag-name="custom-app-shell">
+    ...
+  </qairoe-app-router>
+</qairoe-app-layout>
+```
+
+### Using Route patterns
+
+Route patterns changes
+
+@demo
+
+@demo demo/index.html  Simple usage 
 -->
 
 <dom-module id="qairoe-app-router">
