@@ -256,7 +256,11 @@
             ga('set', 'page', this.path);
             ga('send', 'pageview');
           }
-        }.bind(this));
+        }.bind(this)).catch(function(error) {
+          console.error(error);
+          
+          this.fire('change-view-error', errpr);
+        });
       },
       
       renderForAuth: function() {
