@@ -345,6 +345,7 @@
               newView.element.constructor === HTMLElement || 
               newView.element.constructor === HTMLUnknownElement) {
             this._newView = 'not-found';
+            return this._changeView();
           }
           
           // if the element has been loaded, but still the constructor is not set

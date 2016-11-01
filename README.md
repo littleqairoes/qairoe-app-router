@@ -21,8 +21,8 @@ To use:
   <page-element-two route="/page/:id"></page-element-two>
   <page-element-three route="/page/:id/edit" auth></page-element-three>
   <page-element-four route="/page/:id/edit" auth="[[someBooleanValue]]"></page-element-four>
-  <page-not-authorized not-authorized></page-not-authorized>
-  <page-not-found not-found></page-not-found>
+  <page-not-authorized route="not-authorized"></page-not-authorized>
+  <page-not-found route="not-found"></page-not-found>
 </qairoe-app-router>
 ```
 
