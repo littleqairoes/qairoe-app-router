@@ -287,7 +287,7 @@
         }
         
         // check if the page element has an auth attribute and if it is set to true or false
-        if (newView.element.auth !== null && newView.element.auth !== undefined && !newView.element.auth) {
+        if (newView.element.auth !== null && newView.element.auth !== undefined && !!!newView.element.auth) {
           
           // if it is being checked for the first time (like first load and authentication checking hasn't kicked in)
           // wait for 2 seconds before checking the view again.
