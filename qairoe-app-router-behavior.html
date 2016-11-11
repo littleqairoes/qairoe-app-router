@@ -378,7 +378,7 @@
           }
         
           // using google tag manager
-          if (!typeof dataLayer) {
+          if (window.dataLayer) {
             dataLayer.push({
               'event':'virtualPageView',
               'page':{
@@ -387,7 +387,7 @@
               }
             });
           // or if using google analytics
-          } else if (!typeof ga) {
+          } else if (window.ga) {
             ga('set', 'page', this.path);
             ga('send', 'pageview');
           }
