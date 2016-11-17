@@ -59,6 +59,14 @@
          */
         parentTagName: {
           type: String
+        },
+
+        /**
+         * This is for iron-selected navigation lists
+         */
+        currentRoute: {
+          type: String,
+          notify: true
         }
       },
       
@@ -177,6 +185,9 @@
         var routes = this._routes;
         var patternMatched = null;
         this.params = {};
+
+        // TODO: TEST IF THIS IS THE RIGHT WAY
+        this.currentRoute = path;
         
         // goes checks each and every route
         for (var pattern in routes) {

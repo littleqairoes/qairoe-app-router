@@ -40,6 +40,8 @@ See [ROADMAP](/ROADMAP.md)
 
 ## History
 
+- v0.0.5: Added currentRoute and fixed some bugs
+
 - v0.0.1: Changed the whole behavior to follow what I've learned from @paullewis' router used in Supercharged
 
 - v0.0.0: Creation of repository and copying of reach-core-route element
