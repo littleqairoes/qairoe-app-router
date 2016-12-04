@@ -402,6 +402,9 @@
             ga('set', 'page', this.path);
             ga('send', 'pageview');
           }
+
+          this.fire('view-loaded');
+          
         }.bind(this)).catch(function(error) {
           console.error(error);
           
