@@ -387,6 +387,8 @@
           if (newView && newView.title) {
             document.title = newView.title;
           }
+
+          this.fire('view-loaded');
         
           // using google tag manager
           if (window.dataLayer) {
@@ -403,7 +405,7 @@
             ga('send', 'pageview');
           }
 
-          this.fire('view-loaded');
+          
           
         }.bind(this)).catch(function(error) {
           console.error(error);
