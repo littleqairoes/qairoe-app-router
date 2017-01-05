@@ -40,7 +40,7 @@
          */ 
         params: {
           type: Object,
-          value: function() { return {}; },
+          // value: function() { return {}; },
           notify: true
         },
         
@@ -49,7 +49,7 @@
          */ 
         queryParams: {
           type: Object,
-          value: function() { return {}; },
+          // value: function() { return {}; },
           notify: true
         },
         
@@ -117,7 +117,7 @@
        * properties. It also calls the page element's updateView method if it exists
        */
       _setQueryParams: function(queryParams) {
-        this.queryParams = queryParams;
+        this.queryParams = queryParams || {};
         this._updateCurrentViewData();
       },
       
@@ -137,8 +137,8 @@
         } 
         
         if (this._currentView) {
-          this._routes[this._currentView].element.params = this.params;
-          this._routes[this._currentView].element.queryParams = this.queryParams;  
+          this._routes[this._currentView].element.params = this.params || {};
+          this._routes[this._currentView].element.queryParams = this.queryParams || {};  
         }
         
       },
@@ -257,7 +257,7 @@
         // route patterns, make view a not-found
         if (patternMatched) {
           this._newView = patternMatched;
-          this.params = namedMatches;
+          this.params = namedMatches || {};
         } else {
           this._newView = 'not-found';
         }
@@ -379,8 +379,8 @@
           }
           
           if (newView && newView.element) {
-            newView.element.params = this.params;
-            newView.element.queryParams = this.queryParams;
+            newView.element.params = this.params || {};
+            newView.element.queryParams = this.queryParams || {};
           }
           
           // change the title in the browser
