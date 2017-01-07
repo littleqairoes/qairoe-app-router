@@ -333,12 +333,19 @@
         // if the view has not been loaded, call the importLazyGroup method from LazyGroupBehaviors
         // to load the element and push the result to the promise
         if (!this._routes[this._newView].resolved) {
-          var lazyGroupPromise = this.importLazyGroup(newView.element.tagName.toLocaleLowerCase(), this._fromElement);
-          if (!(lazyGroupPromise instanceof Promise)) {
-            lazyGroupPromise = Promise.resolve();
+          if (this._routes[this._newView].element.constructor === HTMLElement || this._routes[this._newView].element.constructor === HTMLUnknownElement) {
+            var lazyGroupPromise = this.importLazyGroup(newView.element.tagName.toLocaleLowerCase(), this._fromElement);
+            if (!(lazyGroupPromise instanceof Promise)) {
+              lazyGroupPromise = Promise.resolve();
+            }
+            promises.push(lazyGroupPromise); 
+          } else {
+            this._routes[this._newView].resolved = {
+              loaded: [true] 
+            };
           }
-          promises.push(lazyGroupPromise);  
         }
+
         
         // execute all promises and outputs the result
         Promise.all(promises).then(function(result) {
